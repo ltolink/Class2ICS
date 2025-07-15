@@ -1,7 +1,8 @@
 import copy
 import datetime
 import tkinter as tk
-from tkinter import ttk, messagebox , filedialog
+from tkinter import ttk, messagebox, filedialog
+from pathlib import Path
 import Class2ICS
 
 # 版本信息
@@ -64,6 +65,10 @@ def read_file():
     global max_week, show_table, course_schedule_name, course_list
     # 读取文件内容
     soup = Class2ICS.read_html_file(file_path)
+    if soup is None:
+        messagebox.showerror("错误", "文件中不存在课程表")
+        start_page()
+        return
     table = Class2ICS.parse_soup_to_table(soup)
     course_list = Class2ICS.table_to_list(table)
     # 获取最大周数
@@ -83,6 +88,10 @@ def save_file_page():
     save_window = tk.Toplevel(root)
     save_window.title("保存文件")
     save_window.geometry("300x200")
+    try:
+        save_window.iconbitmap(icon_path)
+    except:
+        pass
     # 置中显示
     screen_width = save_window.winfo_screenwidth()
     screen_height = save_window.winfo_screenheight()
@@ -117,7 +126,8 @@ def save_ics(course_list: list, course_start_date: str):
     """
     # 转为datatime格式
     try:
-        course_start_date = datetime.datetime.strptime(course_start_date, "%Y-%m-%d")
+        course_start_date = datetime.datetime.strptime(course_start_date,
+                                                       "%Y-%m-%d")
     except ValueError:
         messagebox.showerror("错误", "日期格式错误")
         return
@@ -130,17 +140,26 @@ def save_ics(course_list: list, course_start_date: str):
             course_start_date, course_dict)
         # 添加课程事件
         Class2ICS.add_course_event(cal, course_dict, date_time_list)
-    
+
     for i in range(1, max_week + 3):
         Class2ICS.add_week_event(cal, i, course_start_date)
 
     # 写入日历文件
     str = cal.to_ical()
-    name = Class2ICS.write_calendar_file(str, course_schedule_name)
-    if name == "":
+    # 保存到选择的路径下
+    # 名称为课程表名称.ics
+    save_path = filedialog.asksaveasfilename(
+        defaultextension=".ics",
+        initialfile=course_schedule_name + "课程表.ics",
+        filetypes=[("ICS files", "*.ics")],
+        title="保存文件")
+    try:
+        with open(save_path, "wb") as f:
+            f.write(str)
+    except:
         messagebox.showerror("错误", "保存失败")
         return
-    messagebox.showinfo("保存成功", f"日历文件已保存到:\n{name}")
+    messagebox.showinfo("保存成功", f"日历文件已保存到:\n{save_path}")
 
 
 # 关于页面
@@ -152,6 +171,10 @@ def about_page():
     about_window = tk.Toplevel(root)
     about_window.title("关于")
     about_window.geometry("300x200")
+    try:
+        about_window.iconbitmap(icon_path)
+    except:
+        pass
     # 置中显示
     screen_width = about_window.winfo_screenwidth()
     screen_height = about_window.winfo_screenheight()
@@ -328,6 +351,13 @@ def cource_list_to_show_table(course_list: list, max_week: int) -> list:
 
 # 初始化窗口
 root = tk.Tk()
+# 图标路径
+icon_path = Path(__file__).parent / "icon.ico"
+# 设置图标
+try:
+    root.wm_iconbitmap(icon_path)
+except:
+    pass
 root.title("课程表转换工具")
 root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
 # 在屏幕中央显示窗口

@@ -335,7 +335,8 @@ def add_week_event(cal, week_num, course_start_date):
     event.add('summary', f'第{week_num}周')
     # 设置事件的开始日期和结束日期
     course_start_date = course_start_date.date()
-    event.add('dtstart', course_start_date + datetime.timedelta(weeks=week_num - 1))
+    event.add('dtstart',
+              course_start_date + datetime.timedelta(weeks=week_num - 1))
     event.add('dtend', course_start_date + datetime.timedelta(weeks=week_num))
     # 设置事件的地点
     event.add('location', '学校')

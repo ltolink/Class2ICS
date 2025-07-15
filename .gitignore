@@ -1,4 +1,8 @@
 Class schedule/
 Calendar file/
 __pycache__/
+build/
+dist/
 *.ics
+*.spec
+*.png
